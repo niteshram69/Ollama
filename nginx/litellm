@@ -1,0 +1,53 @@
+upstream litellm_backend {
+    server 127.0.0.1:4001;
+    keepalive 32;
+}
+
+server {
+    listen 4000 default_server;
+    listen [::]:4000 default_server;
+
+    server_name _;
+
+    client_max_body_size 16m;
+
+    # Timeouts tuned for long inference
+    proxy_connect_timeout 30s;
+    proxy_send_timeout 600s;
+    proxy_read_timeout 600s;
+    send_timeout 600s;
+    keepalive_timeout 300s;
+
+    location / {
+        proxy_pass http://litellm_backend;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Connection "";
+
+        # CRITICAL: disable all buffering for streaming
+        proxy_buffering off;
+        proxy_request_buffering off;
+        proxy_cache off;
+        add_header X-Accel-Buffering no always;
+        chunked_transfer_encoding on;
+
+        # CORS for browser access
+        add_header Access-Control-Allow-Origin * always;
+        add_header Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE" always;
+        add_header Access-Control-Allow-Headers "Authorization, Content-Type, Accept" always;
+        add_header Access-Control-Max-Age 86400 always;
+
+        if ($request_method = OPTIONS) {
+            return 204;
+        }
+    }
+
+    location /health {
+        access_log off;
+        return 200 "ok\n";
+    }
+}

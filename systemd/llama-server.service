@@ -1,0 +1,46 @@
+[Unit]
+Description=llama.cpp Inference Server (Qwen2.5 8B Q4_K_M)
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=niteshram
+Group=niteshram
+WorkingDirectory=/opt/jarvis
+
+ExecStart=/opt/jarvis/runtime/llama.cpp/build/bin/llama-server \
+    --model /opt/jarvis/models/qwen2.5-8b-instruct-q4_k_m.gguf \
+    --host 127.0.0.1 \
+    --port 8080 \
+    --threads 6 \
+    --parallel 4 \
+    --ctx-size 8192 \
+    --batch-size 2048 \
+    --ubatch-size 512 \
+    --flash-attn auto \
+    --mlock \
+    --cont-batching \
+    --cache-type-k q8_0 \
+    --cache-type-v q8_0 \
+    --slots \
+    --metrics
+
+Restart=always
+RestartSec=3
+LimitNOFILE=1048576
+LimitMEMLOCK=infinity
+OOMScoreAdjust=-900
+
+Environment=OMP_NUM_THREADS=6
+Environment=GOMP_CPU_AFFINITY=0-5
+Environment=OMP_SCHEDULE=static
+Environment=OMP_PLACES=cores
+Environment=OMP_PROC_BIND=close
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=llama-server
+
+[Install]
+WantedBy=multi-user.target

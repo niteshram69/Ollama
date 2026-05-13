@@ -1,0 +1,26 @@
+[Unit]
+Description=LiteLLM Proxy — OpenAI-compatible gateway
+After=network.target llama-server.service redis-server.service
+Wants=llama-server.service redis-server.service
+
+[Service]
+Type=simple
+User=niteshram
+Group=niteshram
+EnvironmentFile=/etc/litellm/litellm.env
+ExecStart=/opt/litellm/venv/bin/litellm \
+    --config /etc/litellm/config.yaml \
+    --host 127.0.0.1 \
+    --port 4001 \
+    --num_workers 2
+Restart=always
+RestartSec=3
+LimitNOFILE=65535
+WorkingDirectory=/home/niteshram
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=litellm
+
+[Install]
+WantedBy=multi-user.target

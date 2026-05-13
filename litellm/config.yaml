@@ -1,0 +1,54 @@
+model_list:
+  - model_name: qwen2.5-8b
+    litellm_params:
+      model: openai/qwen2.5-8b
+      api_base: http://127.0.0.1:8080/v1
+      api_key: none
+      stream: true
+      max_tokens: 4096
+      timeout: 120
+
+  - model_name: planner
+    litellm_params:
+      model: openai/qwen2.5-8b
+      api_base: http://127.0.0.1:8080/v1
+      api_key: none
+      stream: true
+      max_tokens: 4096
+      timeout: 120
+
+  - model_name: chat
+    litellm_params:
+      model: openai/qwen2.5-8b
+      api_base: http://127.0.0.1:8080/v1
+      api_key: none
+      stream: true
+      max_tokens: 2048
+      timeout: 90
+
+  - model_name: classifier
+    litellm_params:
+      model: openai/qwen2.5-8b
+      api_base: http://127.0.0.1:8080/v1
+      api_key: none
+      stream: true
+      max_tokens: 256
+      timeout: 30
+
+litellm_settings:
+  set_verbose: false
+  request_timeout: 120
+  num_retries: 2
+  cache: true
+  cache_params:
+    type: redis
+    host: 127.0.0.1
+    port: 6379
+    namespace: jarvis
+  fallbacks:
+    - planner: [chat]
+    - chat: [planner]
+    - classifier: [chat]
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
